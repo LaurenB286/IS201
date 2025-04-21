@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <br>
+  <title>Flappy Cosmo</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: whitesmoke;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: lightblue;
+      border: 4px solid #333;
+    }
+
+    #startBtn, #resetBtn {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+      z-index: 1;
+      background-color: #fff;
+      border: 2px solid #333;
+      border-radius: 8px;
+    }
+
+    #startBtn {
+      top: 20px;
+    }
+
+    #resetBtn {
+      top: 60px;
+      font-size: 14px;
+      padding: 6px 14px;
+    }
+
+    #score, #highScore {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #score {
+      top: 100px;
+    }
+
+    #highScore {
+      top: 140px;
+      font-size: 20px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <button id="startBtn">Start Game</button>
+  <button id="resetBtn">Reset High Score</button>
+  <div id="score">Score: 0</div>
+  <div id="highScore">High Score: 0</div>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const scoreEl = document.getElementById("score");
+    const highScoreEl = document.getElementById("highScore");
+
+    const cosmoImg = new Image();
+    cosmoImg.src = "assets/img/cosmo.jpg";
+
+    let dot = { x: 50, y: 200, width: 40, height: 40, velocity: 0 };
+    let gravity = 0.5;
+    let jump = -8;
+    let pipes = [];
+    let pipeWidth = 60;
+    let pipeGap = 140;
+    let gameOver = false;
+    let score = 0;
+    let highScore = localStorage.getItem("flappyHighScore") || 0;
+    highScoreEl.innerText = "High Score: " + highScore;
+
+    function resetGame() {
+      dot.y = 200;
+      dot.velocity = 0;
+      pipes = [];
+      score = 0;
+      gameOver = false;
+      scoreEl.innerText = "Score: 0";
+    }
+
+    function createPipe() {
+      const topHeight = Math.random() * (canvas.height - pipeGap - 100) + 50;
+      pipes.push({
+        x: canvas.width,
+        top: topHeight,
+        bottom: topHeight + pipeGap,
+      });
+    }
+
+    function drawCosmo() {
+      ctx.drawImage(cosmoImg, dot.x, dot.y, dot.width, dot.height);
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "#2ecc40";
+      pipes.forEach(pipe => {
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+        ctx.fillRect(pipe.x, pipe.bottom, pipeWidth, canvas.height - pipe.bottom);
+      });
+    }
+
+    function updatePipes() {
+      pipes.forEach(pipe => {
+        pipe.x -= 2;
+      });
+
+      if (pipes.length && pipes[0].x + pipeWidth < 0) {
+        pipes.shift();
+        score++;
+        scoreEl.innerText = "Score: " + score;
+      }
+
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+        createPipe();
+      }
+    }
+
+    function checkCollision() {
+      if (dot.y + dot.height > canvas.height || dot.y < 0) {
+        return true;
+      }
+      for (let pipe of pipes) {
+        if (
+          dot.x + dot.width > pipe.x &&
+          dot.x < pipe.x + pipeWidth &&
+          (dot.y < pipe.top || dot.y + dot.height > pipe.bottom)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function gameLoop() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      dot.velocity += gravity;
+      dot.y += dot.velocity;
+
+      drawCosmo();
+      drawPipes();
+      updatePipes();
+
+      if (checkCollision()) {
+        gameOver = true;
+
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem("flappyHighScore", highScore);
+          highScoreEl.innerText = "High Score: " + highScore;
+        }
+
+        alert("Game Over! Final Score: " + score);
+        return;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        dot.velocity = jump;
+      }
+    });
+
+    canvas.addEventListener("click", () => {
+      dot.velocity = jump;
+    });
+
+    startBtn.addEventListener("click", () => {
+      resetGame();
+      gameLoop();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      localStorage.removeItem("flappyHighScore");
+      highScore = 0;
+      highScoreEl.innerText = "High Score: 0";
+    });
+  </script>
+   <nav class="common">
+    <a href="scratch.html">Scratch Page</a>
+</nav>
+</body>
+</html>
