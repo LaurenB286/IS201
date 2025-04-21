@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Cosmo</title>
+  <title>Flappy Smiley</title>
   <style>
     body {
       margin: 0;
@@ -18,12 +18,12 @@
       border: 4px solid #333;
     }
 
-    #startBtn, #resetBtn {
+    #startBtn, #resetHighScoreBtn {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 18px;
-      padding: 10px 20px;
+      font-size: 16px;
+      padding: 8px 16px;
       cursor: pointer;
       z-index: 1;
       background-color: #fff;
@@ -35,35 +35,32 @@
       top: 20px;
     }
 
-    #resetBtn {
+    #resetHighScoreBtn {
       top: 60px;
-      font-size: 14px;
-      padding: 6px 14px;
     }
 
     #score, #highScore {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
       color: #333;
     }
 
     #score {
-      top: 100px;
+      top: 110px;
     }
 
     #highScore {
       top: 140px;
-      font-size: 20px;
       color: #555;
     }
   </style>
 </head>
 <body>
   <button id="startBtn">Start Game</button>
-  <button id="resetBtn">Reset High Score</button>
+  <button id="resetHighScoreBtn">Reset High Score</button>
   <div id="score">Score: 0</div>
   <div id="highScore">High Score: 0</div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
@@ -72,14 +69,11 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const startBtn = document.getElementById("startBtn");
-    const resetBtn = document.getElementById("resetBtn");
+    const resetHighScoreBtn = document.getElementById("resetHighScoreBtn");
     const scoreEl = document.getElementById("score");
     const highScoreEl = document.getElementById("highScore");
 
-    const cosmoImg = new Image();
-    cosmoImg.src = "assets/img/cosmo.jpg";
-
-    let dot = { x: 50, y: 200, width: 40, height: 40, velocity: 0 };
+    let dot = { x: 50, y: 200, radius: 20, velocity: 0 };
     let gravity = 0.5;
     let jump = -8;
     let pipes = [];
@@ -108,8 +102,29 @@
       });
     }
 
-    function drawCosmo() {
-      ctx.drawImage(cosmoImg, dot.x, dot.y, dot.width, dot.height);
+    function drawSmiley() {
+      // Face
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Eyes
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(dot.x - 7, dot.y - 7, 2.5, 0, Math.PI * 2);
+      ctx.arc(dot.x + 7, dot.y - 7, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Smile
+      ctx.beginPath();
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.arc(dot.x, dot.y + 4, 8, 0.2 * Math.PI, 0.8 * Math.PI);
+      ctx.stroke();
     }
 
     function drawPipes() {
@@ -137,14 +152,14 @@
     }
 
     function checkCollision() {
-      if (dot.y + dot.height > canvas.height || dot.y < 0) {
+      if (dot.y + dot.radius > canvas.height || dot.y - dot.radius < 0) {
         return true;
       }
       for (let pipe of pipes) {
         if (
-          dot.x + dot.width > pipe.x &&
-          dot.x < pipe.x + pipeWidth &&
-          (dot.y < pipe.top || dot.y + dot.height > pipe.bottom)
+          dot.x + dot.radius > pipe.x &&
+          dot.x - dot.radius < pipe.x + pipeWidth &&
+          (dot.y - dot.radius < pipe.top || dot.y + dot.radius > pipe.bottom)
         ) {
           return true;
         }
@@ -160,7 +175,7 @@
       dot.velocity += gravity;
       dot.y += dot.velocity;
 
-      drawCosmo();
+      drawSmiley();
       drawPipes();
       updatePipes();
 
@@ -195,14 +210,11 @@
       gameLoop();
     });
 
-    resetBtn.addEventListener("click", () => {
+    resetHighScoreBtn.addEventListener("click", () => {
       localStorage.removeItem("flappyHighScore");
       highScore = 0;
       highScoreEl.innerText = "High Score: 0";
     });
   </script>
-   <nav class="common">
-    <a href="scratch.html">Scratch Page</a>
-</nav>
 </body>
 </html>
